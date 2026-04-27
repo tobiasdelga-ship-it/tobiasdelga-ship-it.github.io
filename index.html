@@ -22,35 +22,57 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      min-height: 100svh;
-      text-align: center;
       background: #e0b84f;
       color: #0f0f0f;
     }
 
-    h1 {
-      font-size: clamp(2rem, 6vw, 3rem);
-      line-height: 1.4;
-      max-width: 90vw;
-      margin: 0;
-
-      border-right: 2px solid currentColor;
-
-      white-space: normal;
-      word-break: break-word;
-
-      animation: blink 1s step-end infinite;
+    .container {
+      position: relative;
+      text-align: center;
     }
 
+    h1 {
+      margin: 0;
+      font-size: clamp(2.2rem, 5vw, 3rem);
+      line-height: 1.4;
+      white-space: nowrap;
+    }
+
+    /* mobile layout */
     @media (max-width: 600px) {
       h1 {
-        font-size: clamp(2.2rem, 8vw, 3.2rem);
-        line-height: 1.5;
+        white-space: pre-line;
+        font-size: clamp(2.8rem, 9vw, 3.8rem);
+        line-height: 1.6;
+        padding: 0 20px;
       }
     }
 
+    /* invisible layout lock */
+    #ghost {
+      visibility: hidden;
+    }
+
+    /* typing text overlays but doesn't affect layout */
+    #textLayer {
+      position: absolute;
+      inset: 0;
+    }
+
+    #cursor {
+      display: inline-block;
+      margin-left: 4px;
+      animation: blink 1s step-end infinite;
+      opacity: 0.8;
+    }
+
+    .cursor-stop {
+      animation: none;
+      opacity: 1;
+    }
+
     @keyframes blink {
-      50% { border-color: transparent; }
+      50% { opacity: 0; }
     }
 
     .hidden {
@@ -58,7 +80,13 @@
     }
 
     .over-text {
-      font-size: clamp(2.5rem, 8vw, 4rem);
+      position: absolute;
+      inset: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      font-size: clamp(3rem, 10vw, 4.5rem);
       color: #e0b84f;
       opacity: 0;
       transition: opacity 0.3s ease;
@@ -71,21 +99,44 @@
 </head>
 
 <body>
-  <h1 id="text"></h1>
-  <div id="over" class="over-text hidden">over</div>
+  <div class="container">
+
+    <h1>
+      <span id="ghost"></span>
+      <span id="textLayer">
+        <span id="text"></span><span id="cursor">|</span>
+      </span>
+    </h1>
+
+    <div id="over" class="over-text hidden">over</div>
+
+  </div>
 
   <script>
-    const message = "hi I'm writing music rn, brb";
+    const isMobile = window.innerWidth <= 600;
+
+    const message = isMobile
+      ? "hi I'm writing\nmusic rn,\nbrb"
+      : "hi I'm writing music rn, brb";
+
+    const ghost = document.getElementById("ghost");
     const textEl = document.getElementById("text");
+    const cursor = document.getElementById("cursor");
     const overEl = document.getElementById("over");
     const body = document.body;
+
+    // lock layout BEFORE typing
+    ghost.textContent = message;
 
     let i = 0;
 
     function reset() {
       textEl.innerHTML = "";
       i = 0;
-      textEl.classList.remove("hidden");
+
+      cursor.classList.remove("hidden");
+      cursor.classList.remove("cursor-stop");
+
       overEl.classList.add("hidden");
       overEl.classList.remove("show");
 
@@ -101,6 +152,7 @@
         i++;
         setTimeout(type, 50);
       } else {
+        cursor.classList.add("cursor-stop");
         setTimeout(loopDots, 800);
       }
     }
@@ -120,7 +172,8 @@
     }
 
     function transitionToOver() {
-      textEl.classList.add("hidden");
+      document.querySelector("h1").classList.add("hidden");
+      cursor.classList.add("hidden");
 
       body.style.background = "#000";
       body.style.color = "#000";
@@ -135,6 +188,7 @@
         overEl.classList.remove("show");
 
         setTimeout(() => {
+          document.querySelector("h1").classList.remove("hidden");
           reset();
         }, 500);
       }, 1000);
