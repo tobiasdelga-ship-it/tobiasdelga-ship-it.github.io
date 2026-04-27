@@ -2,35 +2,134 @@
 <html>
 <head>
   <title>brb, it's almost over</title>
+
+  <!-- your font -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cutive+Mono&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cutive+Mono&display=swap" rel="stylesheet">
+
   <style>
-    body {
+    html, body {
       margin: 0;
-      height: 100vh;
+      padding: 0;
+      height: 100%;
+      font-family: "Cutive Mono", monospace; /* 👈 applied globally */
+      overflow: hidden;
+      transition: background 0.6s ease, color 0.6s ease;
+    }
+
+    body {
       display: flex;
       justify-content: center;
       align-items: center;
-      background: #d4a017;
-      color: #0d0d0d;
-      font-family: "Cutive Mono", monospace;
-      font-weight: 400;
-      font-style: normal;
-}
-;
+      min-height: 100svh;
+      text-align: center;
+      background: #e0b84f;
+      color: #0f0f0f;
+      position: relative;
     }
 
     h1 {
-      font-size: 2rem;
-      font-weight: 300;
-      text-align: center;
-      max-width: 600px;
+      font-size: clamp(1.5rem, 5vw, 2.2rem);
       line-height: 1.4;
+      max-width: 90vw;
+      margin: 0;
+      border-right: 2px solid currentColor;
+      white-space: nowrap;
+      overflow: hidden;
+      animation: blink 1s step-end infinite;
+    }
+
+    @keyframes blink {
+      50% { border-color: transparent; }
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .over-text {
+      font-size: clamp(2rem, 6vw, 3rem);
+      color: #e0b84f;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .show {
+      opacity: 1;
     }
   </style>
 </head>
+
 <body>
-  <h1>hi, I'm working on music right now brb</h1>
+  <h1 id="text"></h1>
+  <div id="over" class="over-text hidden">over</div>
+
+  <script>
+    const message = "hi, I'm working on music right now brb";
+    const textEl = document.getElementById("text");
+    const overEl = document.getElementById("over");
+    const body = document.body;
+
+    let i = 0;
+    let typingSpeed = 50;
+
+    function reset() {
+      textEl.innerHTML = "";
+      i = 0;
+      textEl.classList.remove("hidden");
+      overEl.classList.add("hidden");
+      body.style.background = "#e0b84f";
+      body.style.color = "#0f0f0f";
+      type();
+    }
+
+    function type() {
+      if (i < message.length) {
+        textEl.innerHTML += message.charAt(i);
+        i++;
+        setTimeout(type, typingSpeed);
+      } else {
+        setTimeout(loopDots, 800);
+      }
+    }
+
+    function loopDots() {
+      let dots = 0;
+
+      const interval = setInterval(() => {
+        dots = (dots + 1) % 4;
+        textEl.innerHTML = message + ".".repeat(dots);
+      }, 500);
+
+      setTimeout(() => {
+        clearInterval(interval);
+        transitionToOver();
+      }, 10000);
+    }
+
+    function transitionToOver() {
+      textEl.classList.add("hidden");
+
+      body.style.background = "#000";
+      body.style.color = "#000";
+
+      overEl.classList.remove("hidden");
+
+      setTimeout(() => {
+        overEl.classList.add("show");
+      }, 50);
+
+      setTimeout(() => {
+        overEl.classList.remove("show");
+
+        setTimeout(() => {
+          reset();
+        }, 500);
+      }, 1000);
+    }
+
+    type();
+  </script>
 </body>
 </html>
