@@ -3,7 +3,7 @@
 <head>
   <title>brb</title>
 
-  <!-- your font -->
+  <!-- Font -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cutive+Mono&display=swap" rel="stylesheet">
@@ -13,7 +13,7 @@
       margin: 0;
       padding: 0;
       height: 100%;
-      font-family: "Cutive Mono", monospace; /* 👈 applied globally */
+      font-family: "Cutive Mono", monospace;
       overflow: hidden;
       transition: background 0.6s ease, color 0.6s ease;
     }
@@ -26,18 +26,27 @@
       text-align: center;
       background: #e0b84f;
       color: #0f0f0f;
-      position: relative;
     }
 
     h1 {
-      font-size: clamp(1.5rem, 5vw, 2.2rem);
+      font-size: clamp(2rem, 6vw, 3rem);
       line-height: 1.4;
       max-width: 90vw;
       margin: 0;
+
       border-right: 2px solid currentColor;
-      white-space: nowrap;
-      overflow: hidden;
+
+      white-space: normal;
+      word-break: break-word;
+
       animation: blink 1s step-end infinite;
+    }
+
+    @media (max-width: 600px) {
+      h1 {
+        font-size: clamp(2.2rem, 8vw, 3.2rem);
+        line-height: 1.5;
+      }
     }
 
     @keyframes blink {
@@ -49,7 +58,7 @@
     }
 
     .over-text {
-      font-size: clamp(2rem, 6vw, 3rem);
+      font-size: clamp(2.5rem, 8vw, 4rem);
       color: #e0b84f;
       opacity: 0;
       transition: opacity 0.3s ease;
@@ -66,21 +75,23 @@
   <div id="over" class="over-text hidden">over</div>
 
   <script>
-    const message = "hi, I'm writing music right now brb";
+    const message = "hi I'm writing music rn, brb";
     const textEl = document.getElementById("text");
     const overEl = document.getElementById("over");
     const body = document.body;
 
     let i = 0;
-    let typingSpeed = 50;
 
     function reset() {
       textEl.innerHTML = "";
       i = 0;
       textEl.classList.remove("hidden");
       overEl.classList.add("hidden");
+      overEl.classList.remove("show");
+
       body.style.background = "#e0b84f";
       body.style.color = "#0f0f0f";
+
       type();
     }
 
@@ -88,7 +99,7 @@
       if (i < message.length) {
         textEl.innerHTML += message.charAt(i);
         i++;
-        setTimeout(type, typingSpeed);
+        setTimeout(type, 50);
       } else {
         setTimeout(loopDots, 800);
       }
