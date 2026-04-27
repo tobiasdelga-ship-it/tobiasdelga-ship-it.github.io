@@ -22,41 +22,43 @@
       display: flex;
       justify-content: center;
       align-items: center;
+      min-height: 100svh;
+      text-align: center;
       background: #e0b84f;
       color: #0f0f0f;
     }
 
-    .container {
-      position: relative;
-      text-align: center;
-    }
-
     h1 {
+      position: relative;
       margin: 0;
       font-size: clamp(2.2rem, 5vw, 3rem);
       line-height: 1.4;
+    }
+
+    /* invisible full text (locks layout) */
+    #ghost {
+      visibility: hidden;
       white-space: nowrap;
     }
 
-    /* mobile layout */
+    /* actual typing layer */
+    #textWrapper {
+      position: absolute;
+      top: 0;
+      left: 0;
+      white-space: nowrap;
+    }
+
     @media (max-width: 600px) {
-      h1 {
+      #ghost, #textWrapper {
         white-space: pre-line;
+      }
+
+      h1 {
         font-size: clamp(2.8rem, 9vw, 3.8rem);
         line-height: 1.6;
         padding: 0 20px;
       }
-    }
-
-    /* invisible layout lock */
-    #ghost {
-      visibility: hidden;
-    }
-
-    /* typing text overlays but doesn't affect layout */
-    #textLayer {
-      position: absolute;
-      inset: 0;
     }
 
     #cursor {
@@ -79,8 +81,9 @@
       display: none;
     }
 
+    /* ✅ fixed centering */
     .over-text {
-      position: absolute;
+      position: fixed;
       inset: 0;
       display: flex;
       justify-content: center;
@@ -88,6 +91,7 @@
 
       font-size: clamp(3rem, 10vw, 4.5rem);
       color: #e0b84f;
+
       opacity: 0;
       transition: opacity 0.3s ease;
     }
@@ -99,18 +103,17 @@
 </head>
 
 <body>
-  <div class="container">
+  <h1>
+    <!-- invisible layout anchor -->
+    <span id="ghost"></span>
 
-    <h1>
-      <span id="ghost"></span>
-      <span id="textLayer">
-        <span id="text"></span><span id="cursor">|</span>
-      </span>
-    </h1>
+    <!-- visible typing -->
+    <span id="textWrapper">
+      <span id="text"></span><span id="cursor">|</span>
+    </span>
+  </h1>
 
-    <div id="over" class="over-text hidden">over</div>
-
-  </div>
+  <div id="over" class="over-text hidden">over</div>
 
   <script>
     const isMobile = window.innerWidth <= 600;
@@ -125,7 +128,7 @@
     const overEl = document.getElementById("over");
     const body = document.body;
 
-    // lock layout BEFORE typing
+    // lock layout immediately
     ghost.textContent = message;
 
     let i = 0;
@@ -134,6 +137,7 @@
       textEl.innerHTML = "";
       i = 0;
 
+      textEl.classList.remove("hidden");
       cursor.classList.remove("hidden");
       cursor.classList.remove("cursor-stop");
 
@@ -172,7 +176,7 @@
     }
 
     function transitionToOver() {
-      document.querySelector("h1").classList.add("hidden");
+      textEl.classList.add("hidden");
       cursor.classList.add("hidden");
 
       body.style.background = "#000";
@@ -188,7 +192,6 @@
         overEl.classList.remove("show");
 
         setTimeout(() => {
-          document.querySelector("h1").classList.remove("hidden");
           reset();
         }, 500);
       }, 1000);
