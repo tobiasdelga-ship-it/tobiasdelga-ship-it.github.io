@@ -86,10 +86,40 @@
       opacity: 1;
     }
 
-    /* ===== MOBILE ONLY (NO STRUCTURE CHANGE, ONLY VISUAL SCALE) ===== */
+    /* ===== MOBILE FIX (CENTERING CORRECTED) ===== */
     body.mobile h1 {
       font-size: 2.8rem;
       line-height: 1.9;
+
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+
+      /* KEY FIX: ensures true screen centering stability */
+      width: 100%;
+      text-align: center;
+    }
+
+    body.mobile #textWrapper {
+      position: static;
+      white-space: normal;
+
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    body.mobile #ghost {
+      display: block;
+      white-space: pre;
+    }
+
+    body.mobile .mobile-line {
+      display: block;
+      width: 100%;        /* KEY FIX */
+      text-align: center; /* KEY FIX */
     }
   </style>
 </head>
@@ -110,10 +140,13 @@
       (navigator.maxTouchPoints > 0) ||
       window.matchMedia("(pointer: coarse)").matches;
 
-    if (isMobile) document.body.classList.add("mobile");
+    if (isMobile) {
+      document.body.classList.add("mobile");
+    }
 
     const message       = "hi I'm writing music rn, brb";
     const mobileMessage = "hi\nI'm writing music rn,\nbrb";
+    const lineTexts     = ["hi", "I'm writing music rn,", "brb"];
 
     const ghost  = document.getElementById("ghost");
     const textEl = document.getElementById("text");
@@ -128,8 +161,27 @@
     let i = 0;
     const pauseAfter = { 1: 700, 23: 700 };
 
+    let mobileLineEls = null;
+    let mobileLineIdx = 0;
+
+    function buildMobileLines() {
+      textEl.innerHTML = "";
+      mobileLineEls = [];
+
+      lineTexts.forEach(() => {
+        const span = document.createElement("span");
+        span.className = "mobile-line";
+        textEl.appendChild(span);
+        mobileLineEls.push(span);
+      });
+
+      mobileLineEls[0].appendChild(cursor);
+      mobileLineIdx = 0;
+    }
+
     function reset() {
       i = 0;
+      mobileLineIdx = 0;
 
       body.classList.remove("black");
 
@@ -143,7 +195,8 @@
       body.style.background = "#e0b84f";
       body.style.color = "#0f0f0f";
 
-      textEl.innerHTML = "";
+      if (isMobile) buildMobileLines();
+      else textEl.innerHTML = "";
 
       type();
     }
@@ -152,13 +205,18 @@
       if (i < activeMessage.length) {
         const char = activeMessage.charAt(i);
 
-        if (char === "\n") {
-          textEl.appendChild(document.createElement("br"));
+        if (isMobile) {
+          if (char === "\n") {
+            mobileLineIdx++;
+            mobileLineEls[mobileLineIdx].appendChild(cursor);
+          } else {
+            mobileLineEls[mobileLineIdx].insertBefore(
+              document.createTextNode(char),
+              cursor
+            );
+          }
         } else {
-          textEl.insertBefore(
-            document.createTextNode(char),
-            cursor
-          );
+          textEl.innerHTML += char;
         }
 
         const delay = pauseAfter[i] !== undefined ? pauseAfter[i] : 50;
@@ -173,11 +231,18 @@
     function loopDots() {
       let dots = 0;
 
-      cursor.classList.add("hidden");
+      if (isMobile) cursor.classList.add("hidden");
 
       const interval = setInterval(() => {
         dots = (dots + 1) % 4;
-        textEl.innerHTML = activeMessage + ".".repeat(dots);
+
+        if (isMobile) {
+          mobileLineEls[0].textContent = lineTexts[0];
+          mobileLineEls[1].textContent = lineTexts[1];
+          mobileLineEls[2].textContent = lineTexts[2] + ".".repeat(dots);
+        } else {
+          textEl.innerHTML = activeMessage + ".".repeat(dots);
+        }
       }, 500);
 
       setTimeout(() => {
@@ -204,11 +269,14 @@
       }, 1000);
     }
 
-    function start() {
+    if (isMobile) {
+      document.fonts.ready.then(() => {
+        buildMobileLines();
+        type();
+      });
+    } else {
       type();
     }
-
-    start();
   </script>
 </body>
 </html>
