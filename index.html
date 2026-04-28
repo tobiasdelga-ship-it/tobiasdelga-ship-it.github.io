@@ -90,22 +90,19 @@
     body.mobile h1 {
       font-size: 2.5rem;
       line-height: 1.9;
-      min-height: 15rem;
       width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
     }
 
+    /* Ghost is block so it sizes h1 to full 3-line height — nothing shifts during typing */
     body.mobile #ghost {
-      display: none;
+      display: block;
+      white-space: pre;
     }
 
     body.mobile #textWrapper {
-      position: static;
-      white-space: pre;
-      text-align: center;
       width: 100%;
+      white-space: normal;
+      text-align: center;
     }
   </style>
 </head>
@@ -122,7 +119,7 @@
 
   <script>
     /* =========================
-       MOBILE DETECTION (NOT WIDTH BASED LOGIC)
+       MOBILE DETECTION
        ========================= */
     const isMobile =
       ('ontouchstart' in window) ||
@@ -134,24 +131,32 @@
     }
 
     /* =========================
-       MESSAGE (DESKTOP UNTOUCHED LOGIC)
+       MESSAGES
        ========================= */
-
-    const message = "hi I'm writing music rn, brb";
-
+    const message       = "hi I'm writing music rn, brb";
     const mobileMessage = "hi\nI'm writing music rn,\nbrb";
 
-    const ghost = document.getElementById("ghost");
+    const ghost  = document.getElementById("ghost");
     const textEl = document.getElementById("text");
     const cursor = document.getElementById("cursor");
     const overEl = document.getElementById("over");
-    const body = document.body;
+    const body   = document.body;
 
     const activeMessage = isMobile ? mobileMessage : message;
 
+    // Ghost pre-sizes the h1 so layout never shifts during typing
     ghost.textContent = activeMessage;
 
     let i = 0;
+
+    // Hold this many ms after typing the character at that index
+    // Index 1 = after "hi", index 23 = after the comma — same position in both messages
+    const pauseAfter = { 1: 700, 23: 700 };
+
+    // For mobile, convert \n to <br> so text-align: center works correctly
+    function toHTML(text) {
+      return isMobile ? text.replace(/\n/g, '<br>') : text;
+    }
 
     function reset() {
       textEl.innerHTML = "";
@@ -174,9 +179,11 @@
 
     function type() {
       if (i < activeMessage.length) {
-        textEl.innerHTML += activeMessage.charAt(i);
+        const char = activeMessage.charAt(i);
+        textEl.innerHTML += (isMobile && char === '\n') ? '<br>' : char;
+        const delay = pauseAfter[i] !== undefined ? pauseAfter[i] : 50;
         i++;
-        setTimeout(type, 50);
+        setTimeout(type, delay);
       } else {
         cursor.classList.add("cursor-stop");
         setTimeout(loopDots, 800);
@@ -185,10 +192,11 @@
 
     function loopDots() {
       let dots = 0;
+      const base = toHTML(activeMessage);
 
       const interval = setInterval(() => {
         dots = (dots + 1) % 4;
-        textEl.innerHTML = activeMessage + ".".repeat(dots);
+        textEl.innerHTML = base + ".".repeat(dots);
       }, 500);
 
       setTimeout(() => {
@@ -213,10 +221,7 @@
 
       setTimeout(() => {
         overEl.classList.remove("show");
-
-        setTimeout(() => {
-          reset();
-        }, 500);
+        setTimeout(reset, 500);
       }, 1000);
     }
 
