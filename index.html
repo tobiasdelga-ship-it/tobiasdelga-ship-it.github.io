@@ -86,22 +86,36 @@
       opacity: 1;
     }
 
-    /* ===== MOBILE (visual only, no timing influence) ===== */
+    /* =========================
+       MOBILE FIX (stable + centered + visible)
+       ========================= */
     body.mobile h1 {
       font-size: 2.8rem;
       line-height: 1.9;
+
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
 
     body.mobile #textWrapper {
-      position: static;
-      display: inline-block;
+      position: relative !important;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+
       text-align: center;
       white-space: normal;
     }
 
     body.mobile #text {
-      display: inline;
+      display: inline-block;
       text-align: center;
+    }
+
+    body.mobile #cursor {
+      display: inline-block;
     }
   </style>
 </head>
@@ -228,12 +242,7 @@
       type();
     }
 
-    // KEY FIX: mobile no longer waits (matches desktop start timing)
-    if (isMobile) {
-      start();
-    } else {
-      start();
-    }
+    start();
   </script>
 </body>
 </html>
