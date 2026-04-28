@@ -3,6 +3,9 @@
 <head>
   <title>brb</title>
 
+  <!-- ✅ IMPORTANT: mobile viewport fix -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <!-- Font -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,6 +19,9 @@
       font-family: "Cutive Mono", monospace;
       overflow: hidden;
       transition: background 0.6s ease, color 0.6s ease;
+
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
 
     body {
@@ -35,13 +41,13 @@
       line-height: 1.4;
     }
 
-    /* invisible full text (locks layout) */
+    /* layout anchor */
     #ghost {
       visibility: hidden;
       white-space: nowrap;
     }
 
-    /* typing layer (desktop behavior depends on this) */
+    /* typing layer (desktop default) */
     #textWrapper {
       position: absolute;
       top: 0;
@@ -52,21 +58,21 @@
     /* ✅ MOBILE FIX */
     @media (max-width: 600px) {
 
-      #ghost {
-        display: none;
-      }
-
-      #textWrapper {
-        position: static;     /* KEY FIX: restore normal flow */
-        display: inline-block;
-        white-space: pre-line; /* respects \n */
-      }
-
       h1 {
         font-size: clamp(3rem, 10vw, 4.5rem);
         line-height: 1.6;
         padding: 0 20px;
         max-width: 90vw;
+      }
+
+      #textWrapper {
+        position: static;      /* KEY FIX */
+        display: inline-block;
+        white-space: pre-line; /* respects \n */
+      }
+
+      #ghost {
+        display: none;
       }
     }
 
@@ -94,7 +100,7 @@
       display: none;
     }
 
-    /* centered over */
+    /* centered "over" */
     .over-text {
       position: fixed;
       inset: 0;
@@ -127,7 +133,8 @@
   <div id="over" class="over-text hidden">over</div>
 
   <script>
-    const isMobile = window.innerWidth <= 600;
+    // ✅ CSS-aligned mobile detection (IMPORTANT FIX)
+    const isMobile = window.matchMedia("(max-width: 600px)").matches;
 
     const message = isMobile
       ? "hi I'm writing\nmusic rn,\nbrb"
