@@ -46,20 +46,6 @@
       white-space: nowrap;
     }
 
-    @media (max-width: 600px) {
-      #ghost, #textWrapper {
-        white-space: pre-line;
-      }
-
-      h1 {
-        font-size: clamp(2.8rem, 9vw, 3.8rem);
-        line-height: 1.6;
-        padding: 0 20px;
-        white-space: normal;
-        max-width: 90vw;
-      }
-    }
-
     #cursor {
       display: inline-block;
       margin-left: 4px;
@@ -76,7 +62,6 @@
       50% { opacity: 0; }
     }
 
-    /* 👇 force hide cursor on black screen */
     body.black #cursor {
       display: none;
     }
@@ -100,6 +85,18 @@
     .show {
       opacity: 1;
     }
+
+    /* ===== MOBILE ONLY VISUAL LAYER (NO LOGIC TOUCHING DESKTOP) ===== */
+    body.mobile h1 {
+      font-size: 3.2rem;
+      line-height: 1.7;
+      max-width: 92vw;
+      padding: 0 18px;
+    }
+
+    body.mobile #textWrapper {
+      white-space: pre-line; /* allows manual line breaks */
+    }
   </style>
 </head>
 
@@ -114,11 +111,25 @@
   <div id="over" class="over-text hidden">over</div>
 
   <script>
-    const isMobile = window.innerWidth <= 600;
+    /* =========================
+       MOBILE DETECTION (NOT WIDTH BASED LOGIC)
+       ========================= */
+    const isMobile =
+      ('ontouchstart' in window) ||
+      (navigator.maxTouchPoints > 0) ||
+      window.matchMedia("(pointer: coarse)").matches;
 
-    const message = isMobile
-      ? "hi I'm writing\nmusic rn,\nbrb"
-      : "hi I'm writing music rn, brb";
+    if (isMobile) {
+      document.body.classList.add("mobile");
+    }
+
+    /* =========================
+       MESSAGE (DESKTOP UNTOUCHED LOGIC)
+       ========================= */
+
+    const message = "hi I'm writing music rn, brb";
+
+    const mobileMessage = "hi I'm writing\nmusic rn,\nbrb";
 
     const ghost = document.getElementById("ghost");
     const textEl = document.getElementById("text");
@@ -126,7 +137,9 @@
     const overEl = document.getElementById("over");
     const body = document.body;
 
-    ghost.textContent = message;
+    const activeMessage = isMobile ? mobileMessage : message;
+
+    ghost.textContent = activeMessage;
 
     let i = 0;
 
@@ -134,7 +147,7 @@
       textEl.innerHTML = "";
       i = 0;
 
-      body.classList.remove("black"); // 👈 restore cursor ability
+      body.classList.remove("black");
 
       textEl.classList.remove("hidden");
       cursor.classList.remove("hidden");
@@ -150,8 +163,8 @@
     }
 
     function type() {
-      if (i < message.length) {
-        textEl.innerHTML += message.charAt(i);
+      if (i < activeMessage.length) {
+        textEl.innerHTML += activeMessage.charAt(i);
         i++;
         setTimeout(type, 50);
       } else {
@@ -165,7 +178,7 @@
 
       const interval = setInterval(() => {
         dots = (dots + 1) % 4;
-        textEl.innerHTML = message + ".".repeat(dots);
+        textEl.innerHTML = activeMessage + ".".repeat(dots);
       }, 500);
 
       setTimeout(() => {
@@ -180,7 +193,7 @@
 
       body.style.background = "#000";
       body.style.color = "#000";
-      body.classList.add("black"); // 👈 ensures cursor is gone
+      body.classList.add("black");
 
       overEl.classList.remove("hidden");
 
