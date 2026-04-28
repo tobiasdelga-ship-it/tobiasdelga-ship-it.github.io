@@ -88,14 +88,24 @@
 
     /* ===== MOBILE ONLY VISUAL LAYER (NO LOGIC TOUCHING DESKTOP) ===== */
     body.mobile h1 {
-      font-size: 3.2rem;
-      line-height: 1.7;
-      max-width: 92vw;
-      padding: 0 18px;
+      font-size: 2.5rem;
+      line-height: 1.9;
+      min-height: 15rem;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    body.mobile #ghost {
+      display: none;
     }
 
     body.mobile #textWrapper {
-      white-space: pre-line; /* allows manual line breaks */
+      position: static;
+      white-space: pre;
+      text-align: center;
+      width: 100%;
     }
   </style>
 </head>
@@ -129,7 +139,7 @@
 
     const message = "hi I'm writing music rn, brb";
 
-    const mobileMessage = "hi I'm writing\nmusic rn,\nbrb";
+    const mobileMessage = "hi\nI'm writing music rn,\nbrb";
 
     const ghost = document.getElementById("ghost");
     const textEl = document.getElementById("text");
