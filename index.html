@@ -88,20 +88,19 @@
 
     /* ===== MOBILE ONLY VISUAL LAYER (NO LOGIC TOUCHING DESKTOP) ===== */
     body.mobile h1 {
-      font-size: 2.5rem;
+      font-size: 2.8rem;
       line-height: 1.9;
-      width: 100%;
     }
 
-    /* Ghost is block so it sizes h1 to full 3-line height — nothing shifts during typing */
+    /* Block ghost pre-sizes h1 to full 3-line height+width — identical to desktop pattern */
     body.mobile #ghost {
       display: block;
       white-space: pre;
     }
 
     body.mobile #textWrapper {
+      white-space: pre;
       width: 100%;
-      white-space: normal;
       text-align: center;
     }
   </style>
@@ -153,11 +152,6 @@
     // Index 1 = after "hi", index 23 = after the comma — same position in both messages
     const pauseAfter = { 1: 700, 23: 700 };
 
-    // For mobile, convert \n to <br> so text-align: center works correctly
-    function toHTML(text) {
-      return isMobile ? text.replace(/\n/g, '<br>') : text;
-    }
-
     function reset() {
       textEl.innerHTML = "";
       i = 0;
@@ -179,8 +173,7 @@
 
     function type() {
       if (i < activeMessage.length) {
-        const char = activeMessage.charAt(i);
-        textEl.innerHTML += (isMobile && char === '\n') ? '<br>' : char;
+        textEl.innerHTML += activeMessage.charAt(i);
         const delay = pauseAfter[i] !== undefined ? pauseAfter[i] : 50;
         i++;
         setTimeout(type, delay);
@@ -192,11 +185,10 @@
 
     function loopDots() {
       let dots = 0;
-      const base = toHTML(activeMessage);
 
       const interval = setInterval(() => {
         dots = (dots + 1) % 4;
-        textEl.innerHTML = base + ".".repeat(dots);
+        textEl.innerHTML = activeMessage + ".".repeat(dots);
       }, 500);
 
       setTimeout(() => {
