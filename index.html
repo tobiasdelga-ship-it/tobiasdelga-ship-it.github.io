@@ -6,7 +6,7 @@
   <!-- Font -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cutive+Mono&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cutive+Mono&display=swap&display=swap" rel="stylesheet">
 
   <style>
     html, body {
@@ -16,6 +16,9 @@
       font-family: "Cutive Mono", monospace;
       overflow: hidden;
       transition: background 0.6s ease, color 0.6s ease;
+
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
 
     body {
@@ -58,6 +61,9 @@
         font-size: clamp(2.8rem, 9vw, 3.8rem);
         line-height: 1.6;
         padding: 0 20px;
+
+        white-space: pre-line; /* ✅ controlled line breaks */
+        max-width: 90vw;
       }
     }
 
@@ -77,11 +83,16 @@
       50% { opacity: 0; }
     }
 
+    /* hide cursor during black screen */
+    body.black #cursor {
+      display: none;
+    }
+
     .hidden {
       display: none;
     }
 
-    /* ✅ fixed centering */
+    /* centered "over" */
     .over-text {
       position: fixed;
       inset: 0;
@@ -104,10 +115,8 @@
 
 <body>
   <h1>
-    <!-- invisible layout anchor -->
     <span id="ghost"></span>
 
-    <!-- visible typing -->
     <span id="textWrapper">
       <span id="text"></span><span id="cursor">|</span>
     </span>
@@ -128,7 +137,6 @@
     const overEl = document.getElementById("over");
     const body = document.body;
 
-    // lock layout immediately
     ghost.textContent = message;
 
     let i = 0;
@@ -136,6 +144,8 @@
     function reset() {
       textEl.innerHTML = "";
       i = 0;
+
+      body.classList.remove("black");
 
       textEl.classList.remove("hidden");
       cursor.classList.remove("hidden");
@@ -181,6 +191,7 @@
 
       body.style.background = "#000";
       body.style.color = "#000";
+      body.classList.add("black");
 
       overEl.classList.remove("hidden");
 
