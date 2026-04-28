@@ -3,10 +3,9 @@
 <head>
   <title>brb</title>
 
-  <!-- Font -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cutive+Mono&display=swap&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cutive+Mono&display=swap" rel="stylesheet">
 
   <style>
     html, body {
@@ -16,9 +15,6 @@
       font-family: "Cutive Mono", monospace;
       overflow: hidden;
       transition: background 0.6s ease, color 0.6s ease;
-
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
     }
 
     body {
@@ -38,13 +34,11 @@
       line-height: 1.4;
     }
 
-    /* invisible full text (locks layout) */
     #ghost {
       visibility: hidden;
       white-space: nowrap;
     }
 
-    /* actual typing layer */
     #textWrapper {
       position: absolute;
       top: 0;
@@ -58,12 +52,16 @@
       }
 
       h1 {
-        font-size: clamp(2.8rem, 9vw, 3.8rem);
+        font-size: clamp(3rem, 10vw, 4.5rem); /* 👈 bigger */
         line-height: 1.6;
         padding: 0 20px;
-
-        white-space: pre-line; /* ✅ controlled line breaks */
         max-width: 90vw;
+      }
+
+      #textWrapper {
+        position: static;   /* 👈 THIS FIXES IT */
+        display: block;
+        width: 100%;
       }
     }
 
@@ -83,7 +81,6 @@
       50% { opacity: 0; }
     }
 
-    /* hide cursor during black screen */
     body.black #cursor {
       display: none;
     }
@@ -92,17 +89,14 @@
       display: none;
     }
 
-    /* centered "over" */
     .over-text {
       position: fixed;
       inset: 0;
       display: flex;
       justify-content: center;
       align-items: center;
-
       font-size: clamp(3rem, 10vw, 4.5rem);
       color: #e0b84f;
-
       opacity: 0;
       transition: opacity 0.3s ease;
     }
@@ -147,7 +141,6 @@
 
       body.classList.remove("black");
 
-      textEl.classList.remove("hidden");
       cursor.classList.remove("hidden");
       cursor.classList.remove("cursor-stop");
 
