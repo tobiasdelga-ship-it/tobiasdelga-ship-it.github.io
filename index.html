@@ -86,33 +86,22 @@
       opacity: 1;
     }
 
-    /* ===== MOBILE FIX (isolated, no desktop impact) ===== */
+    /* ===== MOBILE (visual only, no timing influence) ===== */
     body.mobile h1 {
       font-size: 2.8rem;
       line-height: 1.9;
-
-      /* KEY FIX: lock layout so nothing shifts */
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
     }
 
     body.mobile #textWrapper {
-      position: static; /* removes absolute positioning shift */
+      position: static;
+      display: inline-block;
+      text-align: center;
       white-space: normal;
     }
 
-    body.mobile #ghost {
-      display: block;
-      white-space: pre;
-    }
-
-    /* Prevent padding-offset centering system from causing drift */
-    body.mobile .mobile-line {
-      display: block;
+    body.mobile #text {
+      display: inline;
       text-align: center;
-      padding-left: 0 !important;
     }
   </style>
 </head>
@@ -139,7 +128,6 @@
 
     const message       = "hi I'm writing music rn, brb";
     const mobileMessage = "hi\nI'm writing music rn,\nbrb";
-    const lineTexts     = ["hi", "I'm writing music rn,", "brb"];
 
     const ghost  = document.getElementById("ghost");
     const textEl = document.getElementById("text");
@@ -152,30 +140,10 @@
     ghost.textContent = activeMessage;
 
     let i = 0;
-
     const pauseAfter = { 1: 700, 23: 700 };
-
-    let mobileLineEls = null;
-    let mobileLineIdx = 0;
-
-    function buildMobileLines() {
-      textEl.innerHTML = "";
-      mobileLineEls = [];
-
-      lineTexts.forEach(() => {
-        const span = document.createElement("span");
-        span.className = "mobile-line";
-        textEl.appendChild(span);
-        mobileLineEls.push(span);
-      });
-
-      mobileLineEls[0].appendChild(cursor);
-      mobileLineIdx = 0;
-    }
 
     function reset() {
       i = 0;
-      mobileLineIdx = 0;
 
       body.classList.remove("black");
 
@@ -189,8 +157,7 @@
       body.style.background = "#e0b84f";
       body.style.color = "#0f0f0f";
 
-      if (isMobile) buildMobileLines();
-      else textEl.innerHTML = "";
+      textEl.innerHTML = "";
 
       type();
     }
@@ -201,10 +168,9 @@
 
         if (isMobile) {
           if (char === "\n") {
-            mobileLineIdx++;
-            mobileLineEls[mobileLineIdx].appendChild(cursor);
+            textEl.appendChild(document.createElement("br"));
           } else {
-            mobileLineEls[mobileLineIdx].insertBefore(
+            textEl.insertBefore(
               document.createTextNode(char),
               cursor
             );
@@ -229,14 +195,7 @@
 
       const interval = setInterval(() => {
         dots = (dots + 1) % 4;
-
-        if (isMobile) {
-          mobileLineEls[0].textContent = lineTexts[0];
-          mobileLineEls[1].textContent = lineTexts[1];
-          mobileLineEls[2].textContent = lineTexts[2] + ".".repeat(dots);
-        } else {
-          textEl.innerHTML = activeMessage + ".".repeat(dots);
-        }
+        textEl.innerHTML = activeMessage + ".".repeat(dots);
       }, 500);
 
       setTimeout(() => {
@@ -265,13 +224,15 @@
       }, 1000);
     }
 
-    if (isMobile) {
-      document.fonts.ready.then(() => {
-        buildMobileLines();
-        type();
-      });
-    } else {
+    function start() {
       type();
+    }
+
+    // KEY FIX: mobile no longer waits (matches desktop start timing)
+    if (isMobile) {
+      start();
+    } else {
+      start();
     }
   </script>
 </body>
