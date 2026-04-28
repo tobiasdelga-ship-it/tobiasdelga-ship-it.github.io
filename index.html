@@ -52,16 +52,11 @@
       }
 
       h1 {
-        font-size: clamp(3rem, 10vw, 4.5rem); /* 👈 bigger */
+        font-size: clamp(2.8rem, 9vw, 3.8rem);
         line-height: 1.6;
         padding: 0 20px;
+        white-space: normal;
         max-width: 90vw;
-      }
-
-      #textWrapper {
-        position: static;   /* 👈 THIS FIXES IT */
-        display: block;
-        width: 100%;
       }
     }
 
@@ -81,6 +76,7 @@
       50% { opacity: 0; }
     }
 
+    /* 👇 force hide cursor on black screen */
     body.black #cursor {
       display: none;
     }
@@ -110,7 +106,6 @@
 <body>
   <h1>
     <span id="ghost"></span>
-
     <span id="textWrapper">
       <span id="text"></span><span id="cursor">|</span>
     </span>
@@ -139,8 +134,9 @@
       textEl.innerHTML = "";
       i = 0;
 
-      body.classList.remove("black");
+      body.classList.remove("black"); // 👈 restore cursor ability
 
+      textEl.classList.remove("hidden");
       cursor.classList.remove("hidden");
       cursor.classList.remove("cursor-stop");
 
@@ -184,7 +180,7 @@
 
       body.style.background = "#000";
       body.style.color = "#000";
-      body.classList.add("black");
+      body.classList.add("black"); // 👈 ensures cursor is gone
 
       overEl.classList.remove("hidden");
 
