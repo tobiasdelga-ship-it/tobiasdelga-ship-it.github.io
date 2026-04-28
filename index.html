@@ -92,16 +92,16 @@
       line-height: 1.9;
     }
 
-    /* Block ghost pre-sizes h1 to full 3-line height+width — identical to desktop pattern */
+    /* Block ghost pre-sizes h1 to full 3-line height+width */
     body.mobile #ghost {
       display: block;
       white-space: pre;
     }
 
+    /* text-align: left so the hand-calculated leading spaces aren't overridden by inherited center */
     body.mobile #textWrapper {
       white-space: pre;
-      width: 100%;
-      text-align: center;
+      text-align: left;
     }
   </style>
 </head>
@@ -132,8 +132,13 @@
     /* =========================
        MESSAGES
        ========================= */
-    const message       = "hi I'm writing music rn, brb";
-    const mobileMessage = "hi\nI'm writing music rn,\nbrb";
+    const message = "hi I'm writing music rn, brb";
+
+    // "I'm writing music rn," = 21 chars (longest line).
+    // Leading spaces center shorter lines in a monospace font:
+    //   "hi"  (2 chars): pad = ceil((21-2)/2)  = 10 spaces
+    //   "brb" (3 chars): pad = floor((21-3)/2) =  9 spaces
+    const mobileMessage = "          hi\nI'm writing music rn,\n         brb";
 
     const ghost  = document.getElementById("ghost");
     const textEl = document.getElementById("text");
@@ -148,9 +153,25 @@
 
     let i = 0;
 
-    // Hold this many ms after typing the character at that index
-    // Index 1 = after "hi", index 23 = after the comma — same position in both messages
-    const pauseAfter = { 1: 700, 23: 700 };
+    // Pause (ms) to hold after typing the character at that index.
+    // Desktop: idx 1 = after "hi",  idx 23 = after ","
+    // Mobile:  idx 11 = after "hi", idx 33 = after "," (indices shift due to leading spaces)
+    const pauseAfter = isMobile
+      ? { 11: 700, 33: 700 }
+      : { 1: 700, 23: 700 };
+
+    // Leading-space indices that should type at 0ms so the user never sees them animate
+    // Mobile idx 0-9  = 10 spaces before "hi"
+    // Mobile idx 35-43 = 9 spaces before "brb"
+    const mobileInstant = isMobile
+      ? new Set([0,1,2,3,4,5,6,7,8,9,35,36,37,38,39,40,41,42,43])
+      : null;
+
+    function getDelay(idx) {
+      if (pauseAfter[idx] !== undefined) return pauseAfter[idx];
+      if (mobileInstant && mobileInstant.has(idx)) return 0;
+      return 50;
+    }
 
     function reset() {
       textEl.innerHTML = "";
@@ -174,7 +195,7 @@
     function type() {
       if (i < activeMessage.length) {
         textEl.innerHTML += activeMessage.charAt(i);
-        const delay = pauseAfter[i] !== undefined ? pauseAfter[i] : 50;
+        const delay = getDelay(i);
         i++;
         setTimeout(type, delay);
       } else {
