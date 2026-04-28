@@ -98,10 +98,9 @@
       white-space: pre;
     }
 
-    /* text-align: left so the hand-calculated leading spaces aren't overridden by inherited center */
+    /* Line spans inside #text are display:block — just clear the nowrap */
     body.mobile #textWrapper {
-      white-space: pre;
-      text-align: left;
+      white-space: normal;
     }
   </style>
 </head>
@@ -132,13 +131,9 @@
     /* =========================
        MESSAGES
        ========================= */
-    const message = "hi I'm writing music rn, brb";
-
-    // "I'm writing music rn," = 21 chars (longest line).
-    // Leading spaces center shorter lines in a monospace font:
-    //   "hi"  (2 chars): pad = ceil((21-2)/2)  = 10 spaces
-    //   "brb" (3 chars): pad = floor((21-3)/2) =  9 spaces
-    const mobileMessage = "          hi\nI'm writing music rn,\n         brb";
+    const message       = "hi I'm writing music rn, brb";
+    const mobileMessage = "hi\nI'm writing music rn,\nbrb";
+    const lineTexts     = ["hi", "I'm writing music rn,", "brb"];
 
     const ghost  = document.getElementById("ghost");
     const textEl = document.getElementById("text");
@@ -153,29 +148,60 @@
 
     let i = 0;
 
-    // Pause (ms) to hold after typing the character at that index.
-    // Desktop: idx 1 = after "hi",  idx 23 = after ","
-    // Mobile:  idx 11 = after "hi", idx 33 = after "," (indices shift due to leading spaces)
-    const pauseAfter = isMobile
-      ? { 11: 700, 33: 700 }
-      : { 1: 700, 23: 700 };
+    // Pause after "hi" (idx 1) and after "," (idx 23) — same indices in both messages
+    const pauseAfter = { 1: 700, 23: 700 };
 
-    // Leading-space indices that should type at 0ms so the user never sees them animate
-    // Mobile idx 0-9  = 10 spaces before "hi"
-    // Mobile idx 35-43 = 9 spaces before "brb"
-    const mobileInstant = isMobile
-      ? new Set([0,1,2,3,4,5,6,7,8,9,35,36,37,38,39,40,41,42,43])
-      : null;
+    /* =========================
+       MOBILE LINE STATE
+       ========================= */
+    let mobileLineEls = null;
+    let mobileLineIdx = 0;
+    let lineOffsets   = null; // cached after first measurement
 
-    function getDelay(idx) {
-      if (pauseAfter[idx] !== undefined) return pauseAfter[idx];
-      if (mobileInstant && mobileInstant.has(idx)) return 0;
-      return 50;
+    // Measure each line's pixel width using the h1's computed font,
+    // then calculate the padding-left needed to center each line over the widest one.
+    function measureLines() {
+      const probe = document.createElement("span");
+      probe.style.cssText =
+        "position:fixed;top:0;left:-9999px;visibility:hidden;white-space:nowrap";
+      probe.style.font = window.getComputedStyle(document.querySelector("h1")).font;
+      document.body.appendChild(probe);
+
+      const widths = lineTexts.map(t => {
+        probe.textContent = t;
+        return probe.offsetWidth;
+      });
+      document.body.removeChild(probe);
+
+      const maxW = Math.max(...widths);
+      lineOffsets = widths.map(w => Math.round((maxW - w) / 2));
     }
 
-    function reset() {
+    // Build (or rebuild) three display:block spans — one per line — with
+    // pixel-accurate padding-left so each line is centered over the longest one.
+    function buildMobileLines() {
+      if (!lineOffsets) measureLines();
+
       textEl.innerHTML = "";
+      mobileLineEls = lineOffsets.map(offset => {
+        const span = document.createElement("span");
+        span.style.display    = "block";
+        span.style.paddingLeft = offset + "px";
+        textEl.appendChild(span);
+        return span;
+      });
+
+      // Cursor lives inside the current line so it appears at the right position
+      mobileLineEls[0].appendChild(cursor);
+      mobileLineIdx = 0;
+    }
+
+    /* =========================
+       ANIMATION
+       ========================= */
+    function reset() {
       i = 0;
+      mobileLineIdx = 0;
 
       body.classList.remove("black");
 
@@ -189,13 +215,36 @@
       body.style.background = "#e0b84f";
       body.style.color = "#0f0f0f";
 
+      if (isMobile) {
+        buildMobileLines();
+      } else {
+        textEl.innerHTML = "";
+      }
+
       type();
     }
 
     function type() {
       if (i < activeMessage.length) {
-        textEl.innerHTML += activeMessage.charAt(i);
-        const delay = getDelay(i);
+        const char = activeMessage.charAt(i);
+
+        if (isMobile) {
+          if (char === "\n") {
+            // Advance to the next line span and move the cursor into it
+            mobileLineIdx++;
+            mobileLineEls[mobileLineIdx].appendChild(cursor);
+          } else {
+            // Insert the character as a text node just before the cursor
+            mobileLineEls[mobileLineIdx].insertBefore(
+              document.createTextNode(char),
+              cursor
+            );
+          }
+        } else {
+          textEl.innerHTML += char;
+        }
+
+        const delay = pauseAfter[i] !== undefined ? pauseAfter[i] : 50;
         i++;
         setTimeout(type, delay);
       } else {
@@ -207,9 +256,20 @@
     function loopDots() {
       let dots = 0;
 
+      // On mobile the cursor is inside a line span; hide it during the dots
+      // phase so we can freely set textContent without losing the element.
+      if (isMobile) cursor.classList.add("hidden");
+
       const interval = setInterval(() => {
         dots = (dots + 1) % 4;
-        textEl.innerHTML = activeMessage + ".".repeat(dots);
+
+        if (isMobile) {
+          mobileLineEls[0].textContent = lineTexts[0];
+          mobileLineEls[1].textContent = lineTexts[1];
+          mobileLineEls[2].textContent = lineTexts[2] + ".".repeat(dots);
+        } else {
+          textEl.innerHTML = activeMessage + ".".repeat(dots);
+        }
       }, 500);
 
       setTimeout(() => {
@@ -238,7 +298,18 @@
       }, 1000);
     }
 
-    type();
+    /* =========================
+       START
+       ========================= */
+    if (isMobile) {
+      // Wait for Cutive Mono to load so measurements are accurate
+      document.fonts.ready.then(() => {
+        buildMobileLines();
+        type();
+      });
+    } else {
+      type();
+    }
   </script>
 </body>
 </html>
