@@ -97,15 +97,31 @@
       line-height: 1.9;
     }
 
-    /* Block ghost pre-sizes h1 to full 3-line height+width */
-    body.mobile #ghost {
-      display: block;
-      white-space: pre;
+    /* Mobile-only layout: use a stable, viewport-wide centered text area. */
+    body.mobile h1 {
+      width: 100vw;
     }
 
-    /* Line spans inside #text are display:block — just clear the nowrap */
+    /* The ghost sizing element was causing mobile layout shifts. */
+    body.mobile #ghost {
+      display: none;
+    }
+
     body.mobile #textWrapper {
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
       white-space: normal;
+    }
+
+    body.mobile #text {
+      display: block;
+      text-align: center;
+    }
+
+    body.mobile #text > span {
+      padding-left: 0 !important;
+      text-align: center;
     }
   </style>
 </head>
@@ -161,42 +177,19 @@
        ========================= */
     let mobileLineEls = null;
     let mobileLineIdx = 0;
-    let lineOffsets   = null; // cached after first measurement
 
-    // Measure each line's pixel width using the h1's computed font,
-    // then calculate the padding-left needed to center each line over the widest one.
-    function measureLines() {
-      const probe = document.createElement("span");
-      probe.style.cssText =
-        "position:fixed;top:0;left:-9999px;visibility:hidden;white-space:nowrap";
-      probe.style.font = window.getComputedStyle(document.querySelector("h1")).font;
-      document.body.appendChild(probe);
-
-      const widths = lineTexts.map(t => {
-        probe.textContent = t;
-        return probe.offsetWidth;
-      });
-      document.body.removeChild(probe);
-
-      const maxW = Math.max(...widths);
-      lineOffsets = widths.map(w => Math.round((maxW - w) / 2));
-    }
-
-    // Build (or rebuild) three display:block spans — one per line — with
-    // pixel-accurate padding-left so each line is centered over the longest one.
+    // Build three centered line spans. No pixel measurements or padding offsets,
+    // so the text stays in a fixed position as each line types in.
     function buildMobileLines() {
-      if (!lineOffsets) measureLines();
-
       textEl.innerHTML = "";
-      mobileLineEls = lineOffsets.map(offset => {
+      mobileLineEls = lineTexts.map(() => {
         const span = document.createElement("span");
-        span.style.display    = "block";
-        span.style.paddingLeft = offset + "px";
+        span.style.display = "block";
         textEl.appendChild(span);
         return span;
       });
 
-      // Cursor lives inside the current line so it appears at the right position
+      // Keep the cursor inside the active line while typing.
       mobileLineEls[0].appendChild(cursor);
       mobileLineIdx = 0;
     }
